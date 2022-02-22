@@ -1,10 +1,27 @@
 
-import express, {Request, Response} from 'express'
+import express, {Request, Response, NextFunction} from 'express'
 import { truncate } from 'fs/promises'
 import { Libaray } from '../models/libaray.model'
 
+const libarayss = Libaray.find()
+
 
 const router = express.Router()
+
+console.log("router called")
+
+
+// Display in a table //
+
+router.get('/get', function(req : Request, res  :Response, next : NextFunction) {
+    libarayss.exec(function(err: any,data: any){
+  if(err) throw err;
+  res.render('table', { title: 'books records', records:data });
+    });
+    
+  });
+
+  
 
 // POST API // 
 
@@ -17,16 +34,49 @@ router.post('/add', async (req:Request, res:Response)=> {
 
     await items.save()
     return res.status(200).json({
-        data: "Data saved successfully..."
+        data: "Data saved successfully...", items
+
     })
 
 })
+
+// Pagination Sheet //
+
+router.get('/get/books/:pages', (req : Request, res : Response, next : NextFunction)=>{
+   
+    var perPage: any = 2
+    let page:any = req.params.pages || 1
+
+let books = Libaray
+                .find({})
+                .skip((perPage * page) - perPage)
+                .limit(perPage)
+                .exec(function (err, books) {
+
+                    //   console.log("result is : ", util.inspect(meetingss, { depth: null }));
+           
+                    Libaray.count().exec(function (err, count) {
+                           if (err) return next(err)
+                           res.render('table', {
+                               books: books,
+                               current: page,
+                               pages: Math.ceil(count / perPage)
+                           })
+                       })
+           
+                      
+                   })
+
+})
+
+
+
 
 
 // GET ALL API //
 
 
-router.get('/', async (req : Request, res : Response)=>{
+ router.get('/', async (req : Request, res : Response)=>{
 
     try{
         const items = await Libaray.find({})
@@ -42,7 +92,7 @@ router.get('/', async (req : Request, res : Response)=>{
 
     }
 
-})
+}) 
 
 
 
@@ -136,3 +186,4 @@ router.put('/update', async (req : Request, res: Response)=>{
 
 
 export  { router }
+

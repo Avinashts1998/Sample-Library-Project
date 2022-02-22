@@ -15,17 +15,48 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.router = void 0;
 const express_1 = __importDefault(require("express"));
 const libaray_model_1 = require("../models/libaray.model");
+const libarayss = libaray_model_1.Libaray.find();
 const router = express_1.default.Router();
 exports.router = router;
+console.log("router called");
+// Display in a table //
+router.get('/get', function (req, res, next) {
+    libarayss.exec(function (err, data) {
+        if (err)
+            throw err;
+        res.render('table', { title: 'books records', records: data });
+    });
+});
 // POST API // 
 router.post('/add', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, title, description, Language, no, Auther, Publisher, Year } = req.body;
     const items = libaray_model_1.Libaray.set({ id, title, description, Language, Auther, Publisher, Year });
     yield items.save();
     return res.status(200).json({
-        data: "Data saved successfully..."
+        data: "Data saved successfully...", items
     });
 }));
+// Pagination Sheet //
+router.get('/get/books/:pages', (req, res, next) => {
+    var perPage = 2;
+    let page = req.params.pages || 1;
+    let books = libaray_model_1.Libaray
+        .find({})
+        .skip((perPage * page) - perPage)
+        .limit(perPage)
+        .exec(function (err, books) {
+        //   console.log("result is : ", util.inspect(meetingss, { depth: null }));
+        libaray_model_1.Libaray.count().exec(function (err, count) {
+            if (err)
+                return next(err);
+            res.render('table', {
+                books: books,
+                current: page,
+                pages: Math.ceil(count / perPage)
+            });
+        });
+    });
+});
 // GET ALL API //
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -83,7 +114,7 @@ router.delete('/delete', (req, res) => __awaiter(void 0, void 0, void 0, functio
             title: req.body.title,
         };
         const item = yield libaray_model_1.Libaray.deleteOne(filter).then((data) => res.json({
-            data: "deleted successfully..!!"
+            data: " Data deleted successfully..!!"
         })).catch((e) => {
             console.log(e);
         });

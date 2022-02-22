@@ -7,11 +7,15 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const router_1 = require("./routes/router");
+const path_1 = __importDefault(require("path"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 mongoose_1.default.connect(process.env.MONGO_URL, () => {
     console.log("DB Connected");
 });
+// Joining to table //
+app.set('table', path_1.default.join(__dirname, 'table'));
+app.set('view engine', 'ejs');
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.use('/', router_1.router);
